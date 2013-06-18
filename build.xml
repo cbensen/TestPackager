@@ -89,7 +89,6 @@
             </fx:resources>
             <fx:info title="Test Application Packager" vendor="Streuth"/>
             <fx:platform>
-              <fx:jvmarg value="-verbose:class"/>
               <fx:jvmarg value="-Djava.policy.file=$APPDIR/app/whatever.policy"/>
               <fx:jvmuserarg name="-Xmx" value="768m" />
               <fx:jvmuserarg name="-Djava.util.logging.config.file=" value="~/logging.properties" />

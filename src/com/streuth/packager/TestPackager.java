@@ -9,7 +9,12 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -17,6 +22,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 
 /**
  *
@@ -31,7 +37,6 @@ public class TestPackager {
     private static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("Display Parameters");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setBounds(0, 0, dim.width / 4, dim.height / 4);
@@ -46,27 +51,46 @@ public class TestPackager {
                 + total.toString());
 
         RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
-        List<String> arguments = RuntimemxBean.getInputArguments();
-        String property = System.getProperty("test1");
-        property = System.getProperty("test2");
+        List<String> arguments = new ArrayList<>(RuntimemxBean.getInputArguments());
+        addJVMUserArgs(arguments);
 
-        JList list = new JList(arguments.toArray(new String[arguments.size()]));
+        JList<String> list = new JList<>(arguments.toArray(new String[arguments.size()]));
         list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         list.setVisibleRowCount(-1);
         JScrollPane listScroller = new JScrollPane(list);
         listScroller.setPreferredSize(new Dimension(400, 200));
+        
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(30, 10, 30, 30));
         panel.add(label, BorderLayout.NORTH);
         panel.add(listScroller, BorderLayout.CENTER);
 
-        frame.getContentPane().add(panel);
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
         frame.setLocationRelativeTo(null);
 
         //Display the window.
+        frame.pack();
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
+    }
+    
+    public static void addJVMUserArgs(List<String> list) {
+        String property = System.getProperty("app.preferences.id");
+        if (property != null) {
+            Preferences node = Preferences.userRoot().node(property);
+            Preferences node1 = node.node("JVMUserOptions");
+            try {
+                String[] keys = node1.keys();
+                for (String key: keys) {
+                     list.add("Key:" + key + node1.get(key, ""));
+                }
+            } catch (BackingStoreException ex) {
+                Logger.getLogger(TestPackager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     public static void main(String[] args) {
